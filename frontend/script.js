@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     sendButton = document.getElementById('sendButton');
     totalCourses = document.getElementById('totalCourses');
     courseTitles = document.getElementById('courseTitles');
-    
+    newChatButton = document.getElementById('newChatButton');
+
     setupEventListeners();
     createNewSession();
     loadCourseStats();
@@ -28,8 +29,10 @@ function setupEventListeners() {
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    
-    
+
+    // New chat
+    newChatButton.addEventListener('click', startNewChat);
+
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -122,10 +125,17 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        const sourceLinks = sources.map(source => {
+            // Sources are {text, link}; link may be absent or an unsafe scheme
+            const text = escapeHtml(source.text);
+            if (!isSafeHttpUrl(source.link)) return `<span class="source-plain">${text}</span>`;
+            return `<a href="${escapeHtml(source.link)}" target="_blank" rel="noopener noreferrer" class="source-link" title="${text}">${text}</a>`;
+        }).join('');
+
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${sourceLinks}</div>
             </details>
         `;
     }
@@ -135,6 +145,18 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
     return messageId;
+}
+
+// Only http(s) links are rendered as anchors - a javascript: URL survives
+// HTML escaping intact and would execute on click
+function isSafeHttpUrl(url) {
+    if (!url) return false;
+    try {
+        const protocol = new URL(url, window.location.origin).protocol;
+        return protocol === 'https:' || protocol === 'http:';
+    } catch {
+        return false;
+    }
 }
 
 // Helper function to escape HTML for user messages
@@ -150,6 +172,31 @@ async function createNewSession() {
     currentSessionId = null;
     chatMessages.innerHTML = '';
     addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+}
+
+// Reset the conversation without reloading the page. The backend session is
+// dropped so its history stops occupying memory; a failure there is non-fatal
+// since clearing currentSessionId already makes the next query start fresh.
+async function startNewChat() {
+    const previousSessionId = currentSessionId;
+
+    createNewSession();
+    chatInput.value = '';
+    chatInput.focus();
+
+    if (!previousSessionId) return;
+
+    try {
+        await fetch(`${API_URL}/session/clear`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ session_id: previousSessionId })
+        });
+    } catch (error) {
+        console.error('Failed to clear session on the server:', error);
+    }
 }
 
 // Load course statistics

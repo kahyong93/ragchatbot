@@ -241,7 +241,57 @@ header h1 {
 }
 
 .sources-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
     padding: 0 0.5rem 0.25rem 1.5rem;
+    color: var(--text-secondary);
+}
+
+/* Each source is a chip so long course titles stay visually separable */
+.source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    max-width: 100%;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.08);
+    color: var(--text-primary);
+    font-size: 0.7rem;
+    line-height: 1.4;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Link-out arrow, marked decorative so screen readers skip it */
+.source-link::after {
+    content: "↗";
+    font-size: 0.65rem;
+    opacity: 0.6;
+}
+
+.source-link:hover {
+    background: rgba(37, 99, 235, 0.18);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.source-link:hover::after {
+    opacity: 1;
+}
+
+.source-link:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Sources without a link render as plain text, not chips */
+.source-plain {
+    font-size: 0.7rem;
+    line-height: 1.4;
+    padding: 0.25rem 0;
     color: var(--text-secondary);
 }
 
@@ -447,7 +497,8 @@ header h1 {
 
 /* Sidebar Headers */
 .stats-header,
-.suggested-header {
+.suggested-header,
+.new-chat-button {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-secondary);
@@ -463,12 +514,14 @@ header h1 {
 }
 
 .stats-header:focus,
-.suggested-header:focus {
+.suggested-header:focus,
+.new-chat-button:focus {
     color: var(--primary-color);
 }
 
 .stats-header:hover,
-.suggested-header:hover {
+.suggested-header:hover,
+.new-chat-button:hover {
     color: var(--primary-color);
 }
 
@@ -489,6 +542,24 @@ header h1 {
 details[open] .stats-header::before,
 details[open] .suggested-header::before {
     transform: rotate(90deg);
+}
+
+/* The button is a <button>, not a <summary>, so it needs these explicitly */
+.new-chat-button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+}
+
+/* Reserves the space the headers' disclosure arrow occupies so the label lines
+   up with them. The arrow's advance width is 10.84px at font-size 12px - a
+   glyph is narrower than its font-size - so this matches that, not 0.75rem. */
+.new-chat-button::before {
+    content: '';
+    display: inline-block;
+    width: 10.84px;
+    margin-right: 0.5rem;
 }
 
 /* Course Stats in Sidebar */

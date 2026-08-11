@@ -40,10 +40,23 @@ class QueryRequest(BaseModel):
     query: str
     session_id: Optional[str] = None
 
+class Source(BaseModel):
+    """A citation for a search result, optionally linking to the lesson video"""
+    text: str
+    link: Optional[str] = None
+
 class QueryResponse(BaseModel):
     """Response model for course queries"""
     answer: str
-    sources: List[str]
+    sources: List[Source]
+    session_id: str
+
+class ClearSessionRequest(BaseModel):
+    """Request model for clearing a session"""
+    session_id: Optional[str] = None
+
+class ClearSessionResponse(BaseModel):
+    """Response model carrying the id of the freshly created session"""
     session_id: str
 
 class CourseStats(BaseModel):
@@ -69,6 +82,19 @@ async def query_documents(request: QueryRequest):
             answer=answer,
             sources=sources,
             session_id=session_id
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/session/clear", response_model=ClearSessionResponse)
+async def clear_session(request: ClearSessionRequest):
+    """Discard the caller's session history and hand back a fresh session id"""
+    try:
+        if request.session_id:
+            rag_system.session_manager.delete_session(request.session_id)
+
+        return ClearSessionResponse(
+            session_id=rag_system.session_manager.create_session()
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
