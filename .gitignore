@@ -25,6 +25,9 @@ chroma_db/
 # Uploads
 uploads/
 
+# Node (front-end tooling)
+node_modules/
+
 # IDE
 .vscode/
 .idea/
