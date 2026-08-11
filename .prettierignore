@@ -1,0 +1,8 @@
+# Nothing outside frontend/ is formatted by Prettier.
+node_modules/
+backend/
+docs/
+.venv/
+uv.lock
+*.db
+chroma_db/
