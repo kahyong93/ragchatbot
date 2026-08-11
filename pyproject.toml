@@ -22,7 +22,9 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
-pythonpath = ["backend"]
+# backend/tests is on the path too: tests/__init__.py makes `tests` a package,
+# so `from conftest import ...` in test modules needs the dir importable itself.
+pythonpath = ["backend", "backend/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
