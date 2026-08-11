@@ -13,3 +13,30 @@ dependencies = [
     "python-dotenv==1.1.1",
     "openai>=2.53.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-q",
+    "--strict-markers",
+    "--tb=short",
+]
+markers = [
+    "api: tests that exercise the FastAPI endpoints",
+    "unit: isolated component tests",
+    "integration: tests that touch real ChromaDB or the network",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
