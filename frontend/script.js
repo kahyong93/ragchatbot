@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, themeToggle;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,7 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
     totalCourses = document.getElementById('totalCourses');
     courseTitles = document.getElementById('courseTitles');
     newChatButton = document.getElementById('newChatButton');
+    themeToggle = document.getElementById('themeToggle');
 
+    initTheme();
     setupEventListeners();
     createNewSession();
     loadCourseStats();
@@ -33,6 +35,9 @@ function setupEventListeners() {
     // New chat
     newChatButton.addEventListener('click', startNewChat);
 
+    // Theme toggle (native button handles Enter/Space keyboard activation)
+    themeToggle.addEventListener('click', toggleTheme);
+
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -43,6 +48,49 @@ function setupEventListeners() {
     });
 }
 
+
+// Theme Functions
+const THEME_KEY = 'themePreference';
+
+function initTheme() {
+    let theme;
+    try {
+        theme = localStorage.getItem(THEME_KEY);
+    } catch (e) {
+        theme = null;
+    }
+
+    if (theme !== 'light' && theme !== 'dark') {
+        // Fall back to OS preference; the CSS default is dark
+        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark';
+    }
+
+    applyTheme(theme);
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (themeToggle) {
+        // role="switch": checked means dark mode is on
+        themeToggle.setAttribute('aria-checked', theme === 'dark' ? 'true' : 'false');
+        const label = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+        themeToggle.setAttribute('aria-label', label);
+        themeToggle.setAttribute('title', label);
+    }
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+    try {
+        localStorage.setItem(THEME_KEY, next);
+    } catch (e) {
+        // Storage unavailable (private mode) — theme still applies for this session
+    }
+}
 
 // Chat Functions
 async function sendMessage() {
